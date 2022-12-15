@@ -10,7 +10,7 @@
 #define DRIVE_ID		"drive"
 #define DRIVE_NAME		"DRIVE"
 #define DRIVE_MIN		0.0f
-#define DRIVE_MAX		50.0f
+#define DRIVE_MAX		80.0f
 #define DRIVE_DEFAULT	0.0f
 #define DRIVE_INTERVAL	0.1f
 

@@ -55,6 +55,9 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     //==============================================================================
+    void loadImpulseResponse();
+
+    //==============================================================================
     juce::AudioProcessorValueTreeState apvts;
 
 private:
@@ -71,11 +74,13 @@ private:
     std::vector<std::unique_ptr<BandSplitter>> lowerSplitters, upperSplitters;
     Compressor lowComp, midComp, highComp;
     NoiseGate gate;
+    std::unique_ptr<juce::dsp::Convolution> convolutions;
     juce::dsp::ProcessSpec spec;
-    juce::dsp::Convolution cabIR;
+    juce::File cabIR;
     int numChannels;
     float level, drive, highLevel;
     double sampleRate;
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiBassAudioProcessor)

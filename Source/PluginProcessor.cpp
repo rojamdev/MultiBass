@@ -14,7 +14,7 @@ MultiBassAudioProcessor::MultiBassAudioProcessor()
                        ),
     apvts(*this, nullptr, "PARAMS", createParameterLayout())
 #endif
-{
+{    
     sampleRate = 0.0;
     level = drive = highLevel = 1.0f;
 
@@ -87,6 +87,20 @@ void MultiBassAudioProcessor::parameterChanged(const juce::String& parameterID, 
 
     else if (parameterID == HI_LVL_ID)
         highLevel = dBtoRatio(newValue);
+}
+
+void MultiBassAudioProcessor::loadImpulseResponse()
+{
+    fileChooser = std::make_unique<juce::FileChooser>("Choose impulse response...",
+                                                      juce::File::getSpecialLocation(juce::File::userHomeDirectory),
+                                                      "*.wav");
+
+    auto folderChooserFlags = juce::FileBrowserComponent::openMode;
+
+    fileChooser->launchAsync(folderChooserFlags, [this](const juce::FileChooser& chooser)
+                           {
+                               cabIR = chooser.getResult();
+                           });
 }
 
 //==============================================================================
@@ -228,6 +242,8 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
             channelData[sample] *= level;
         }
+
+
     }
 }
 

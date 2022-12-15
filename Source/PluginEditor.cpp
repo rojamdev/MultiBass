@@ -5,27 +5,35 @@
 MultiBassAudioProcessorEditor::MultiBassAudioProcessorEditor (MultiBassAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
-    setSize (400, 300);
+    setLookAndFeel(&lookAndFeel);
+    defaultFont.setBold(true);
 
     createControl(LEVEL_ID, LEVEL_NAME, levelSlider, levelLabel, levelAttachment, 0, 0, 100, 100, true);
     createControl(DRIVE_ID, DRIVE_NAME, driveSlider, driveLabel, driveAttachment, 100, 0, 100, 100, true);
     createControl(XOVER_ID, XOVER_NAME, xoverSlider, xoverLabel, xoverAttachment, 200, 0, 100, 100, true);
     createControl(HI_LVL_ID, HI_LVL_NAME, highLevelSlider, highLevelLabel, highLevelAttachment, 300, 0, 100, 100, true);
+
+    addAndMakeVisible(loadFileButton);
+    loadFileButton.setButtonText("Load IR");
+    loadFileButton.setBounds(100, 150, 100, 40);
+    loadFileButton.addListener(this);
+
+    setSize(400, 300);
 }
 
 MultiBassAudioProcessorEditor::~MultiBassAudioProcessorEditor()
 {
+    setLookAndFeel(nullptr);
 }
 
 //==============================================================================
 void MultiBassAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll (juce::Colours::darkgrey);
 }
 
 void MultiBassAudioProcessorEditor::resized()
 {
-    
 }
 
 void MultiBassAudioProcessorEditor::createControl(juce::String parameterID, 
@@ -51,5 +59,14 @@ void MultiBassAudioProcessorEditor::createControl(juce::String parameterID,
     label.setText(parameterName, juce::dontSendNotification);
     label.setBounds(posX, posY + height, width, height / 5);
     label.setJustificationType(juce::Justification::centred);
-    // label.setFont(defaultFont);
+    label.setFont(defaultFont);
+}
+
+void MultiBassAudioProcessorEditor::buttonClicked(juce::Button* button)
+{
+    if (button == &loadFileButton)
+    {
+        DBG("Button clicked");
+        audioProcessor.loadImpulseResponse();
+    }
 }
