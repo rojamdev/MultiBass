@@ -40,3 +40,4 @@
 
 #define UPPER_FREQ		1000.0f
 #define BANDPASS_FREQ	650.0f
+#define BANDPASS_Q		0.85f

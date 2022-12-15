@@ -190,7 +190,9 @@ void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     {
         lowerSplitters[channel]->calcCoeffs(sampleRate, XOVER_DEFAULT);
         upperSplitters[channel]->calcCoeffs(sampleRate, UPPER_FREQ);
-        bandpassFilters[channel]->coefficients = Coefficients::makeBandPass(sampleRate, BANDPASS_FREQ);
+        bandpassFilters[channel]->coefficients = Coefficients::makeBandPass(sampleRate, 
+                                                                            BANDPASS_FREQ,
+                                                                            BANDPASS_Q);
     }
 
     spec.maximumBlockSize = samplesPerBlock;
@@ -275,9 +277,15 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
 float MultiBassAudioProcessor::saturateSample(int channel, float sample)
 {
+    /*TODO:
+    * When drive is max (80.0), Q should be 0.81
+    * When drive is minimum (0.0) (i.e. clean), Q should be 0.01
+    * Therefore, Q = (drive/100) + 0.01
+    */
+    
     auto x = sample;
     x = bandpassFilters[channel]->processSample(x);
-    x = atan(drive * x) / sqrt(x);
+    x = atan(drive * x) / sqrt(drive);
     return x;
 }
 
