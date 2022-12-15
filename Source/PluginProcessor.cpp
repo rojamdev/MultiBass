@@ -17,6 +17,7 @@ MultiBassAudioProcessor::MultiBassAudioProcessor()
 {    
     sampleRate = 0.0;
     level = drive = highLevel = 1.0f;
+    blend = 0.5f;
 
     numChannels = getTotalNumInputChannels();
 
@@ -24,12 +25,14 @@ MultiBassAudioProcessor::MultiBassAudioProcessor()
     {
         lowerSplitters.push_back(std::make_unique<BandSplitter>());
         upperSplitters.push_back(std::make_unique<BandSplitter>());
+        bandpassFilters.push_back(std::make_unique<Filter>());
     }
 
     apvts.addParameterListener(LEVEL_ID, this);
     apvts.addParameterListener(DRIVE_ID, this);
     apvts.addParameterListener(XOVER_ID, this);
     apvts.addParameterListener(HI_LVL_ID, this);
+    apvts.addParameterListener(BLEND_ID, this);
 
     apvts.state = juce::ValueTree(JucePlugin_Name);
 }
@@ -70,6 +73,13 @@ ParameterLayout MultiBassAudioProcessor::createParameterLayout()
                                                                                           HI_LVL_MAX,
                                                                                           HI_LVL_INTERVAL),
                                                            HI_LVL_DEFAULT));
+
+    params.add(std::make_unique<juce::AudioParameterFloat>(BLEND_ID,
+                                                           BLEND_NAME,
+                                                           juce::NormalisableRange<float>(BLEND_MIN,
+                                                                                          BLEND_MAX,
+                                                                                          BLEND_INTERVAL),
+                                                           BLEND_DEFAULT));
     return params;
 }
 
@@ -87,6 +97,9 @@ void MultiBassAudioProcessor::parameterChanged(const juce::String& parameterID, 
 
     else if (parameterID == HI_LVL_ID)
         highLevel = dBtoRatio(newValue);
+
+    else if (parameterID == BLEND_ID)
+        blend = newValue;
 }
 
 void MultiBassAudioProcessor::loadImpulseResponse()
@@ -99,7 +112,11 @@ void MultiBassAudioProcessor::loadImpulseResponse()
 
     fileChooser->launchAsync(folderChooserFlags, [this](const juce::FileChooser& chooser)
                            {
-                               cabIR = chooser.getResult();
+                               juce::File cabIR = chooser.getResult();
+                               convolution.loadImpulseResponse(cabIR, 
+                                                               juce::dsp::Convolution::Stereo::no,
+                                                               juce::dsp::Convolution::Trim::yes,
+                                                               0);
                            });
 }
 
@@ -173,7 +190,15 @@ void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     {
         lowerSplitters[channel]->calcCoeffs(sampleRate, XOVER_DEFAULT);
         upperSplitters[channel]->calcCoeffs(sampleRate, UPPER_FREQ);
+        bandpassFilters[channel]->coefficients = Coefficients::makeBandPass(sampleRate, BANDPASS_FREQ);
     }
+
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.sampleRate = sampleRate;
+    spec.numChannels = getNumInputChannels();
+
+    convolution.prepare(spec);
+    convolution.reset();
 }
 
 void MultiBassAudioProcessor::releaseResources()
@@ -236,15 +261,24 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             highBand *= highLevel;
 
             upperBand = midBand + highBand; // Recombine mid and high into upper band
-            upperBand = atan(drive * upperBand) / sqrt(drive);
+            upperBand = saturateSample(channel, upperBand);
 
-            channelData[sample] = lowBand + upperBand;
+            channelData[sample] = ((1.0f - blend) * lowBand) + (blend * upperBand);
 
             channelData[sample] *= level;
         }
-
-
     }
+
+    juce::dsp::AudioBlock<float> block(buffer);
+    convolution.process(juce::dsp::ProcessContextReplacing<float>(block));
+}
+
+float MultiBassAudioProcessor::saturateSample(int channel, float sample)
+{
+    auto x = sample;
+    x = bandpassFilters[channel]->processSample(x);
+    x = atan(drive * x) / sqrt(x);
+    return x;
 }
 
 //==============================================================================

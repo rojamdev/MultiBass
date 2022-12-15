@@ -7,6 +7,8 @@
 typedef juce::AudioProcessorValueTreeState::ParameterLayout ParameterLayout;
 typedef juce::dsp::NoiseGate<float> NoiseGate;
 typedef juce::dsp::Compressor<float> Compressor;
+typedef juce::dsp::IIR::Filter<float> Filter;
+typedef juce::dsp::IIR::Coefficients<float> Coefficients;
 
 //==============================================================================
 class MultiBassAudioProcessor  : public juce::AudioProcessor,
@@ -64,6 +66,7 @@ private:
     //==============================================================================
     ParameterLayout createParameterLayout();
     void parameterChanged(const juce::String& parameterID, float newValue) override;
+    float saturateSample(int channel, float sample);
 
     inline float dBtoRatio(float dB)
     {
@@ -72,13 +75,11 @@ private:
 
     //==============================================================================
     std::vector<std::unique_ptr<BandSplitter>> lowerSplitters, upperSplitters;
-    Compressor lowComp, midComp, highComp;
-    NoiseGate gate;
-    std::unique_ptr<juce::dsp::Convolution> convolutions;
+    std::vector<std::unique_ptr<Filter>> bandpassFilters;
+    juce::dsp::Convolution convolution;
     juce::dsp::ProcessSpec spec;
-    juce::File cabIR;
     int numChannels;
-    float level, drive, highLevel;
+    float level, drive, highLevel, blend;
     double sampleRate;
     std::unique_ptr<juce::FileChooser> fileChooser;
 

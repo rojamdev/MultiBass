@@ -8,9 +8,7 @@ typedef juce::dsp::IIR::Coefficients<float> Coefficients;
 class BandSplitter
 {
 public:
-	BandSplitter()
-	{
-	}
+	BandSplitter() {}
 
 	void calcCoeffs(double sampleRate, float freq)
 	{

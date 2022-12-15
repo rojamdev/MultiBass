@@ -34,11 +34,11 @@ private:
     //==============================================================================
     MultiBassAudioProcessor& audioProcessor;
 
-    juce::Label levelLabel, driveLabel, xoverLabel, highLevelLabel;
-    juce::Slider levelSlider, driveSlider, xoverSlider, highLevelSlider;
+    juce::Label levelLabel, driveLabel, xoverLabel, highLevelLabel, blendLabel;
+    juce::Slider levelSlider, driveSlider, xoverSlider, highLevelSlider, blendSlider;
 
     std::unique_ptr<SliderAttachment>
-        levelAttachment, driveAttachment, xoverAttachment, highLevelAttachment;
+        levelAttachment, driveAttachment, xoverAttachment, highLevelAttachment, blendAttachment;
 
     juce::TextButton loadFileButton;
 

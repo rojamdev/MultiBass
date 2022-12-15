@@ -12,13 +12,14 @@ MultiBassAudioProcessorEditor::MultiBassAudioProcessorEditor (MultiBassAudioProc
     createControl(DRIVE_ID, DRIVE_NAME, driveSlider, driveLabel, driveAttachment, 100, 0, 100, 100, true);
     createControl(XOVER_ID, XOVER_NAME, xoverSlider, xoverLabel, xoverAttachment, 200, 0, 100, 100, true);
     createControl(HI_LVL_ID, HI_LVL_NAME, highLevelSlider, highLevelLabel, highLevelAttachment, 300, 0, 100, 100, true);
+    createControl(BLEND_ID, BLEND_NAME, blendSlider, blendLabel, blendAttachment, 400, 0, 100, 100, true);
 
     addAndMakeVisible(loadFileButton);
     loadFileButton.setButtonText("Load IR");
     loadFileButton.setBounds(100, 150, 100, 40);
     loadFileButton.addListener(this);
 
-    setSize(400, 300);
+    setSize(GUI_WIDTH, GUI_HEIGHT);
 }
 
 MultiBassAudioProcessorEditor::~MultiBassAudioProcessorEditor()
