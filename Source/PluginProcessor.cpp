@@ -16,8 +16,11 @@ MultiBassAudioProcessor::MultiBassAudioProcessor()
 #endif
 {    
     sampleRate = 0.0;
-    level = drive = highLevel = 1.0f;
-    blend = 0.5f;
+    level = dBtoRatio(LEVEL_DEFAULT);
+    drive = dBtoRatio(DRIVE_DEFAULT);
+    highLevel = dBtoRatio(HI_LVL_DEFAULT);
+    blend = BLEND_DEFAULT;
+    bandpassQ = calcBandpassQ(DRIVE_DEFAULT);
 
     numChannels = getTotalNumInputChannels();
 
@@ -60,11 +63,11 @@ ParameterLayout MultiBassAudioProcessor::createParameterLayout()
                                                                                           DRIVE_INTERVAL),
                                                            DRIVE_DEFAULT));
 
+    juce::NormalisableRange<float> xoverRange(XOVER_MIN, XOVER_MAX, XOVER_INTERVAL);
+    xoverRange.setSkewForCentre(XOVER_DEFAULT);
     params.add(std::make_unique<juce::AudioParameterFloat>(XOVER_ID,
                                                            XOVER_NAME,
-                                                           juce::NormalisableRange<float>(XOVER_MIN,
-                                                                                          XOVER_MAX,
-                                                                                          XOVER_INTERVAL),
+                                                           xoverRange,
                                                            XOVER_DEFAULT));
 
     params.add(std::make_unique<juce::AudioParameterFloat>(HI_LVL_ID,
@@ -89,7 +92,15 @@ void MultiBassAudioProcessor::parameterChanged(const juce::String& parameterID, 
         level = dBtoRatio(newValue);
 
     else if (parameterID == DRIVE_ID)
+    {
         drive = dBtoRatio(newValue);
+        bandpassQ = calcBandpassQ(newValue);
+
+        for (int channel = 0; channel < numChannels; channel++)
+            bandpassFilters[channel]->coefficients = Coefficients::makeBandPass(sampleRate,
+                                                                                BANDPASS_FREQ,
+                                                                                bandpassQ);
+    }
 
     else if (parameterID == XOVER_ID)
         for (int channel = 0; channel < numChannels; channel++)
@@ -153,33 +164,17 @@ bool MultiBassAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double MultiBassAudioProcessor::getTailLengthSeconds() const
-{
-    return 0.0;
-}
+double MultiBassAudioProcessor::getTailLengthSeconds() const { return 0.0; }
 
-int MultiBassAudioProcessor::getNumPrograms()
-{
-    return 1;
-}
+int MultiBassAudioProcessor::getNumPrograms() { return 1; }
 
-int MultiBassAudioProcessor::getCurrentProgram()
-{
-    return 0;
-}
+int MultiBassAudioProcessor::getCurrentProgram() { return 0; }
 
-void MultiBassAudioProcessor::setCurrentProgram (int index)
-{
-}
+void MultiBassAudioProcessor::setCurrentProgram (int index) {}
 
-const juce::String MultiBassAudioProcessor::getProgramName (int index)
-{
-    return {};
-}
+const juce::String MultiBassAudioProcessor::getProgramName (int index) { return {}; }
 
-void MultiBassAudioProcessor::changeProgramName (int index, const juce::String& newName)
-{
-}
+void MultiBassAudioProcessor::changeProgramName (int index, const juce::String& newName) {}
 
 //==============================================================================
 void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -192,7 +187,7 @@ void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
         upperSplitters[channel]->calcCoeffs(sampleRate, UPPER_FREQ);
         bandpassFilters[channel]->coefficients = Coefficients::makeBandPass(sampleRate, 
                                                                             BANDPASS_FREQ,
-                                                                            BANDPASS_Q);
+                                                                            bandpassQ);
     }
 
     spec.maximumBlockSize = samplesPerBlock;
@@ -263,9 +258,9 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             highBand *= highLevel;
 
             upperBand = midBand + highBand; // Recombine mid and high into upper band
-            upperBand = saturateSample(channel, upperBand);
+            upperBand = saturateSample(channel, upperBand, drive);
 
-            channelData[sample] = ((1.0f - blend) * lowBand) + (blend * upperBand);
+            channelData[sample] = 2 * ((1.0f - blend) * lowBand) + (blend * upperBand);
 
             channelData[sample] *= level;
         }
@@ -275,7 +270,7 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     convolution.process(juce::dsp::ProcessContextReplacing<float>(block));
 }
 
-float MultiBassAudioProcessor::saturateSample(int channel, float sample)
+float MultiBassAudioProcessor::saturateSample(int channel, float sample, float gain)
 {
     /*TODO:
     * When drive is max (80.0), Q should be 0.81
@@ -285,15 +280,12 @@ float MultiBassAudioProcessor::saturateSample(int channel, float sample)
     
     auto x = sample;
     x = bandpassFilters[channel]->processSample(x);
-    x = atan(drive * x) / sqrt(drive);
+    x = atan(gain * x) / sqrt(gain);
     return x;
 }
 
 //==============================================================================
-bool MultiBassAudioProcessor::hasEditor() const
-{
-    return true;
-}
+bool MultiBassAudioProcessor::hasEditor() const { return true; }
 
 juce::AudioProcessorEditor* MultiBassAudioProcessor::createEditor()
 {

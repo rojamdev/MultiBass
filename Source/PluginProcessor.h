@@ -66,11 +66,16 @@ private:
     //==============================================================================
     ParameterLayout createParameterLayout();
     void parameterChanged(const juce::String& parameterID, float newValue) override;
-    float saturateSample(int channel, float sample);
+    float saturateSample(int channel, float sample, float gain);
 
     inline float dBtoRatio(float dB)
     {
         return pow(10, dB / 20);
+    }
+
+    inline float calcBandpassQ(float gain)
+    {
+        return ((gain / 100) + 0.01);
     }
 
     //==============================================================================
@@ -79,7 +84,7 @@ private:
     juce::dsp::Convolution convolution;
     juce::dsp::ProcessSpec spec;
     int numChannels;
-    float level, drive, highLevel, blend;
+    float level, drive, highLevel, blend, bandpassQ;
     double sampleRate;
     std::unique_ptr<juce::FileChooser> fileChooser;
 

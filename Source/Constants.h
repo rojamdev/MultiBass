@@ -5,16 +5,16 @@
 
 #define LEVEL_ID		"level"
 #define LEVEL_NAME		"LEVEL"
-#define LEVEL_MIN		-12.0f
-#define LEVEL_MAX		12.0f
+#define LEVEL_MIN		-24.0f
+#define LEVEL_MAX		24.0f
 #define LEVEL_DEFAULT	0.0f
 #define LEVEL_INTERVAL	0.1f
 
 #define DRIVE_ID		"drive"
 #define DRIVE_NAME		"DRIVE"
 #define DRIVE_MIN		0.0f
-#define DRIVE_MAX		80.0f
-#define DRIVE_DEFAULT	40.0f
+#define DRIVE_MAX		100.0f
+#define DRIVE_DEFAULT	60.0f
 #define DRIVE_INTERVAL	0.1f
 
 #define XOVER_ID		"xover"
@@ -40,4 +40,3 @@
 
 #define UPPER_FREQ		1000.0f
 #define BANDPASS_FREQ	650.0f
-#define BANDPASS_Q		0.85f
