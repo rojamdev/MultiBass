@@ -75,7 +75,7 @@ private:
 
     inline float calcBandpassQ(float gain)
     {
-        return ((gain / 100) + 0.01);
+        return ((gain / Q_CONSTANT) + 0.01f);
     }
 
     //==============================================================================
@@ -84,8 +84,8 @@ private:
     juce::dsp::Convolution convolution;
     juce::dsp::ProcessSpec spec;
     int numChannels;
-    float level, drive, highLevel, blend, bandpassQ;
     double sampleRate;
+    float level, drive, xover, highLevel, blend, bandpassQ;
     std::unique_ptr<juce::FileChooser> fileChooser;
 
     //==============================================================================

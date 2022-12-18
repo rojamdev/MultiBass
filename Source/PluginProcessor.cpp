@@ -19,8 +19,9 @@ MultiBassAudioProcessor::MultiBassAudioProcessor()
     level = dBtoRatio(LEVEL_DEFAULT);
     drive = dBtoRatio(DRIVE_DEFAULT);
     highLevel = dBtoRatio(HI_LVL_DEFAULT);
-    blend = BLEND_DEFAULT;
     bandpassQ = calcBandpassQ(DRIVE_DEFAULT);
+    blend = BLEND_DEFAULT;
+    xover = XOVER_DEFAULT;
 
     numChannels = getTotalNumInputChannels();
 
@@ -103,8 +104,12 @@ void MultiBassAudioProcessor::parameterChanged(const juce::String& parameterID, 
     }
 
     else if (parameterID == XOVER_ID)
+    {
+        xover = newValue;
+
         for (int channel = 0; channel < numChannels; channel++)
-            lowerSplitters[channel]->calcCoeffs(sampleRate, newValue);
+            lowerSplitters[channel]->calcCoeffs(sampleRate, xover);
+    }
 
     else if (parameterID == HI_LVL_ID)
         highLevel = dBtoRatio(newValue);
@@ -184,16 +189,16 @@ void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     
     for (int channel = 0; channel < numChannels; channel++)
     {
-        lowerSplitters[channel]->calcCoeffs(sampleRate, XOVER_DEFAULT);
+        lowerSplitters[channel]->calcCoeffs(sampleRate, xover);
         upperSplitters[channel]->calcCoeffs(sampleRate, UPPER_FREQ);
         bandpassFilters[channel]->coefficients = Coefficients::makeBandPass(sampleRate, 
                                                                             BANDPASS_FREQ,
                                                                             bandpassQ);
     }
 
-    spec.maximumBlockSize = samplesPerBlock;
     spec.sampleRate = sampleRate;
-    spec.numChannels = getTotalNumInputChannels();
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getMainBusNumOutputChannels();
 
     convolution.prepare(spec);
     convolution.reset();
@@ -201,8 +206,6 @@ void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
 void MultiBassAudioProcessor::releaseResources()
 {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -261,6 +264,7 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             upperBand = midBand + highBand; // Recombine mid and high into upper band
             upperBand = saturateSample(channel, upperBand, drive);
 
+            // Weighted sum of lower and upper bands, with weighting determined by the "blend" variable
             channelData[sample] = 2 * ((1.0f - blend) * lowBand) + (blend * upperBand);
 
             channelData[sample] *= level;
@@ -290,19 +294,13 @@ juce::AudioProcessorEditor* MultiBassAudioProcessor::createEditor()
 //==============================================================================
 void MultiBassAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
 }
 
 void MultiBassAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
 }
 
 //==============================================================================
-// This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new MultiBassAudioProcessor();
