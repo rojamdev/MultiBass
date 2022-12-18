@@ -38,5 +38,5 @@
 #define BLEND_DEFAULT	0.5f
 #define BLEND_INTERVAL	0.01f
 
-#define UPPER_FREQ		1000.0f
+#define UPPER_FREQ		1500.0f
 #define BANDPASS_FREQ	650.0f

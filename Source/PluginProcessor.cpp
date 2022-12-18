@@ -127,7 +127,8 @@ void MultiBassAudioProcessor::loadImpulseResponse()
                                convolution.loadImpulseResponse(cabIR, 
                                                                juce::dsp::Convolution::Stereo::no,
                                                                juce::dsp::Convolution::Trim::yes,
-                                                               0);
+                                                               0,
+                                                               juce::dsp::Convolution::Normalise::no);
                            });
 }
 
@@ -192,7 +193,7 @@ void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     spec.maximumBlockSize = samplesPerBlock;
     spec.sampleRate = sampleRate;
-    spec.numChannels = getNumInputChannels();
+    spec.numChannels = getTotalNumInputChannels();
 
     convolution.prepare(spec);
     convolution.reset();
@@ -271,13 +272,7 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 }
 
 float MultiBassAudioProcessor::saturateSample(int channel, float sample, float gain)
-{
-    /*TODO:
-    * When drive is max (80.0), Q should be 0.81
-    * When drive is minimum (0.0) (i.e. clean), Q should be 0.01
-    * Therefore, Q = (drive/100) + 0.01
-    */
-    
+{    
     auto x = sample;
     x = bandpassFilters[channel]->processSample(x);
     x = atan(gain * x) / sqrt(gain);
