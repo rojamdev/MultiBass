@@ -16,8 +16,10 @@ MultiBassAudioProcessorEditor::MultiBassAudioProcessorEditor (MultiBassAudioProc
 
     addAndMakeVisible(loadFileButton);
     loadFileButton.setButtonText("Load IR");
-    loadFileButton.setBounds(100, 150, 100, 40);
-    loadFileButton.addListener(this);
+
+    loadFileButton.onClick = [this]() {
+        audioProcessor.loadImpulseResponse(); 
+    };
 
     setSize(GUI_WIDTH, GUI_HEIGHT);
 }
@@ -35,6 +37,7 @@ void MultiBassAudioProcessorEditor::paint (juce::Graphics& g)
 
 void MultiBassAudioProcessorEditor::resized()
 {
+    loadFileButton.setBounds(0, 150, 100, 40);
 }
 
 void MultiBassAudioProcessorEditor::createControl(juce::String parameterID, 
@@ -61,13 +64,4 @@ void MultiBassAudioProcessorEditor::createControl(juce::String parameterID,
     label.setBounds(posX, posY + height, width, height / 5);
     label.setJustificationType(juce::Justification::centred);
     label.setFont(defaultFont);
-}
-
-void MultiBassAudioProcessorEditor::buttonClicked(juce::Button* button)
-{
-    if (button == &loadFileButton)
-    {
-        DBG("Button clicked");
-        audioProcessor.loadImpulseResponse();
-    }
 }

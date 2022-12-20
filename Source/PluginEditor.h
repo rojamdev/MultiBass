@@ -7,8 +7,7 @@
 typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
 
 //==============================================================================
-class MultiBassAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                       public juce::Button::Listener
+class MultiBassAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
     MultiBassAudioProcessorEditor (MultiBassAudioProcessor&);
@@ -28,8 +27,6 @@ private:
                        int posX, int posY,
                        int height, int width,
                        bool showTextBox);
-
-    void buttonClicked(juce::Button* button) override;
 
     //==============================================================================
     MultiBassAudioProcessor& audioProcessor;

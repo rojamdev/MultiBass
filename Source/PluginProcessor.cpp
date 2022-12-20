@@ -128,12 +128,12 @@ void MultiBassAudioProcessor::loadImpulseResponse()
 
     fileChooser->launchAsync(folderChooserFlags, [this](const juce::FileChooser& chooser)
                            {
-                               juce::File cabIR = chooser.getResult();
-                               convolution.loadImpulseResponse(cabIR, 
-                                                               juce::dsp::Convolution::Stereo::no,
-                                                               juce::dsp::Convolution::Trim::yes,
-                                                               0,
-                                                               juce::dsp::Convolution::Normalise::no);
+                                 juce::File impulseResponse = chooser.getResult();
+
+                                 convolution.loadImpulseResponse(impulseResponse,
+                                                                 juce::dsp::Convolution::Stereo::yes,
+                                                                 juce::dsp::Convolution::Trim::yes,
+                                                                 0);
                            });
 }
 
@@ -198,10 +198,10 @@ void MultiBassAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = getMainBusNumOutputChannels();
+    spec.numChannels = getTotalNumOutputChannels();
 
-    convolution.prepare(spec);
     convolution.reset();
+    convolution.prepare(spec);
 }
 
 void MultiBassAudioProcessor::releaseResources()
@@ -239,7 +239,7 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    juce::AudioBuffer<float> lowBuffer, highBuffer;
+    juce::dsp::AudioBlock<float> block(buffer);
 
     // Main processing loop
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -265,14 +265,14 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             upperBand = saturateSample(channel, upperBand, drive);
 
             // Weighted sum of lower and upper bands, with weighting determined by the "blend" variable
-            channelData[sample] = 2 * ((1.0f - blend) * lowBand) + (blend * upperBand);
+            channelData[sample] = 2.0f * ((1.0f - blend) * lowBand) + (blend * upperBand);
 
             channelData[sample] *= level;
         }
     }
 
-    juce::dsp::AudioBlock<float> block(buffer);
-    convolution.process(juce::dsp::ProcessContextReplacing<float>(block));
+    if (convolution.getCurrentIRSize() > 0)
+        convolution.process(juce::dsp::ProcessContextReplacing<float>(block));
 }
 
 float MultiBassAudioProcessor::saturateSample(int channel, float sample, float gain)
