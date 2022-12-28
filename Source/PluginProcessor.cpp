@@ -265,7 +265,7 @@ void MultiBassAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             upperBand = saturateSample(channel, upperBand, drive);
 
             // Weighted sum of lower and upper bands, with weighting determined by the "blend" variable
-            channelData[sample] = 2.0f * ((1.0f - blend) * lowBand) + (blend * upperBand);
+            channelData[sample] = 2.0f * ( ((1.0f - blend) * lowBand) + (blend * upperBand) );
 
             channelData[sample] *= level;
         }

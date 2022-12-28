@@ -16,6 +16,7 @@
 #define DRIVE_MAX		100.0f
 #define DRIVE_DEFAULT	60.0f
 #define DRIVE_INTERVAL	0.1f
+#define DRIVE_OFFSET	0.1f
 
 #define XOVER_ID		"xover"
 #define XOVER_NAME		"Tone"

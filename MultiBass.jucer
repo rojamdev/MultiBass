@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="l4sTdw" name="MultiBass" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              pluginManufacturer="RojamDSP">
   <MAINGROUP id="IJMOjl" name="MultiBass">
     <GROUP id="{3EDB06F8-86AC-E56C-F994-9B207344B6E4}" name="Source">
       <FILE id="B6cF0E" name="BandSplitter.h" compile="0" resource="0" file="Source/BandSplitter.h"/>

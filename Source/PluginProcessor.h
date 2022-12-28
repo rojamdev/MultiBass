@@ -81,12 +81,18 @@ private:
     //==============================================================================
     std::vector<std::unique_ptr<BandSplitter>> lowerSplitters, upperSplitters;
     std::vector<std::unique_ptr<Filter>> bandpassFilters;
+
     juce::dsp::Convolution convolution;
     juce::dsp::ProcessSpec spec;
+
     int numChannels;
     double sampleRate;
     float level, drive, xover, highLevel, blend, bandpassQ;
+
     std::unique_ptr<juce::FileChooser> fileChooser;
+
+    juce::dsp::ProcessorDuplicator<juce::dsp::IIR::Filter<float>, 
+        juce::dsp::IIR::Coefficients<float>> highShelves;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MultiBassAudioProcessor)
